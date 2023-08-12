@@ -1,0 +1,5 @@
+*.exe
+.idea
+src/golang.org/
+src/github.com/
+src/gopkg.in/

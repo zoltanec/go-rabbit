@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - &app-volume .:/task_manager:cached
+    ports:
+      - 18000:18000
+    restart: unless-stopped
+    depends_on:
+      - db
+      - ampq
+    environment:
+      TEST_GOOPT: -W:no-deprecated -W:no-experimental
+    networks:
+      - backend
+  ampq:
+    image: rabbitmq:3.10.7-management
+    restart: always
+    hostname: localhost
+    environment:
+      - RABBITMQ_DEFAULT_USER=rbuser
+      - RABBITMQ_DEFAULT_PASS=rbpassword
+    ports:
+      - 5672:5672
+      - 15672:15672
+  db:
+    image: mariadb:10.11
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_USER: mysql
+      MARIADB_PASSWORD: mysql
+      MARIADB_ROOT_PASSWORD: mroot
+networks:
+  backend:
