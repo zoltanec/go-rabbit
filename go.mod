@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
