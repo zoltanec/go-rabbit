@@ -27,9 +27,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize app: %s", err.Error())
 	}
-	//producer := rabbit.NewProducer()
-	consumer := rabbit.NewConsumer()
-	go rabbit.Produce(appInstance.Channel, ctx)
+	producer := rabbit.NewProducer()
+	consumer := rabbit.NewConsumer(producer)
+	go producer.Produce(appInstance.Channel, ctx)
 	//Запустить в пять потоков
 	go consumer.Consume(appInstance.Channel)
 	appInstance.Run()

@@ -8,11 +8,21 @@ import (
 	"time"
 	"fmt"
 	"context"
+	"net/http"
+	"io"
+	"errors"
 )
 
 type Consumer struct {
 	log *logger.Logger
 }
+
+const (
+    username = "root"
+    password = "mroot"
+    hostname = "127.0.0.1:3306"
+    dbname   = "cons_requests"
+)
 
 func NewConsumer() (cons *Consumer) {
 	cons = &Consumer{}
@@ -47,8 +57,25 @@ func (cons *Consumer) Consume(channel *amqp.Channel) {
 		go func() {
 			for {
 				data := <-msgs
-				cons.log.Printf("<- Received Message: %s\n", data.Body)
 				data.Ack(false)
+				cons.log.Printf("<- Received Message: %s\n", data.Body)
+				url, err := cons.getUrlFromMsg(data.Body)
+				res, err := cons.makeRequest(url)
+				if err != nil {
+				    cons.log.Printf("Hui na ni: %s\n", res)
+				    //I will publish new ampq message with url
+				    channel.Publish(
+                        "",         // exchange
+                        "nobrakes", // key
+                        false,      // mandatory
+                        false,      // immediate
+                        amqp.Publishing{
+                            ContentType: "text/plain",
+                            Body:        []byte(url),
+                        },
+                    )
+				}
+				cons.log.Printf("<- Received Data: %s\n", res)
 				time.Sleep(time.Second * 10)
 			}
 		}()
@@ -58,17 +85,49 @@ func (cons *Consumer) Consume(channel *amqp.Channel) {
 	<-forever
 }
 
-const (
-    username = "root"
-    password = "mroot"
-    hostname = "127.0.0.1:3306"
-    dbname   = "cons_requests"
-)
-
 func dsn(dbName string) string {
     return fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, hostname, dbName)
 }
 
+func (cons *Consumer) getUrlFromMsg(body []byte) (url string, err error) {
+    //todo: write regexp checker for url
+    url = string(body)
+    if url == "" {
+        err = errors.New("Wrong ampq message");
+    }
+
+    return url, err
+}
+
+func (cons *Consumer) makeRequest(url string) (p []byte, err error) {
+    var client = &http.Client{
+        Timeout: time.Second * 10,
+    }
+
+    cons.log.Info("ContentInfo request to " + url)
+
+    res, err := client.Get(url)
+    if err != nil {
+        cons.log.Info("Unable to load content settings: " + err.Error())
+        return
+    }
+
+    p, err = io.ReadAll(res.Body)
+    if err != nil {
+        cons.log.Info("Unable to read client settings reply: " + err.Error())
+        return
+    }
+
+    /*
+    err = json.Unmarshal(content, &reply)
+    if err != nil {
+    	g.Info("Incorrect json reply for contentId: " + err.Error())
+    	return
+    }
+    */
+
+    return p, nil
+}
 
 //*sql.DB
 func (cons *Consumer) saveDb() {

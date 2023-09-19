@@ -5,61 +5,64 @@ import (
 	"fmt"
 	logger "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
+	"math/rand"
 	"time"
 )
 
 type Producer struct {
 	log *logger.Logger
+	queue amqp.Queue
 }
 
-func NewProducer() (p *Producer) {
+var resources = [3]string{
+    "https://api.myip.com",
+    "http://edns.ip-api.com/json",
+    "https://v3.football.api-sports.io/",
+}
+
+func NewProducer(channel *amqp.Channel) (p *Producer) {
 	p = &Producer{}
 	p.log = logger.New()
+	queue, err := channel.QueueDeclare(
+    		"nobrakes", // name
+    		true,       // durable
+    		false,      // auto delete
+    		false,      // exclusive
+    		false,      // no wait
+    		nil,        // args
+    	)
+    if err != nil {
+        panic(err)
+    }
+    p.queue = queue
 	return
 }
 
-func Produce(channel *amqp.Channel, ctx context.Context) {
+func (p *Producer) Produce(channel *amqp.Channel, ctx context.Context) {
 	fmt.Println("start producer ...")
 	//channel := app.channel
-	/*if err != nil {
-		panic(err)
-	}*/
 	//defer channel.Close()
 
 	// declaring queue with its properties over the the channel opened
-	queue, err := channel.QueueDeclare(
-		"nobrakes", // name
-		true,       // durable
-		false,      // auto delete
-		false,      // exclusive
-		false,      // no wait
-		nil,        // args
-	)
-	if err != nil {
-		panic(err)
-	}
+
+	//if err != nil {
+		//panic(err)
+	//}
 
 	//go func() {
 	//ctx.Err() == nil
 
 	fmt.Println("-> Running cycle")
 	for i := 1; i < 6; i++ {
-		//fmt.Println("err", err)
-		if err != nil {
-			fmt.Println("-> Get error and sleep some")
-			time.Sleep(time.Minute)
-			continue
-		}
-
 		// publishing a message
-		err = channel.Publish(
+		err := channel.Publish(
 			"",         // exchange
 			"nobrakes", // key
 			false,      // mandatory
 			false,      // immediate
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        []byte("http://ya.ru"),
+				Body:        []byte(resources[rand.Intn(2)]),
 			},
 		)
 
@@ -68,7 +71,7 @@ func Produce(channel *amqp.Channel, ctx context.Context) {
 			panic(err)
 		}
 
-		queue, err = channel.QueueInspect("nobrakes")
+		queue, err := channel.QueueInspect("nobrakes")
 		if err != nil {
 			fmt.Println("-> Panic")
 			panic(err)
