@@ -52,7 +52,7 @@ func (cons *Consumer) Consume(channel *amqp.Channel) {
 	// print consumed messages from queue
 	forever := make(chan bool)
 
-	numThreads := 6
+	numThreads := 5
 	for i := 1; i <= numThreads; i++ {
 		go func() {
 			for {
@@ -60,6 +60,9 @@ func (cons *Consumer) Consume(channel *amqp.Channel) {
 				data.Ack(false)
 				cons.log.Printf("<- Received Message: %s\n", data.Body)
 				url, err := cons.getUrlFromMsg(data.Body)
+				if err != nil {
+				    continue;
+				}
 				res, err := cons.makeRequest(url)
 				if err != nil {
 				    cons.log.Printf("Hui na ni: %s\n", res)
@@ -74,6 +77,7 @@ func (cons *Consumer) Consume(channel *amqp.Channel) {
                             Body:        []byte(url),
                         },
                     )
+                    fmt.Println("->-> Successfully again published message, sleep 3 sec")
 				}
 				cons.log.Printf("<- Received Data: %s\n", res)
 				time.Sleep(time.Second * 10)

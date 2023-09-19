@@ -27,10 +27,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize app: %s", err.Error())
 	}
-	producer := rabbit.NewProducer()
-	consumer := rabbit.NewConsumer(producer)
+	producer := rabbit.NewProducer(appInstance.Channel)
+	consumer := rabbit.NewConsumer()
 	go producer.Produce(appInstance.Channel, ctx)
-	//Запустить в пять потоков
-	go consumer.Consume(appInstance.Channel)
+
+	//Думаю тут можно без горутины, правильно?
+	//Но для удобности можно горутину, чтобы новые модули запускать?
+    consumer.Consume(appInstance.Channel)
 	appInstance.Run()
 }
