@@ -25,18 +25,11 @@ func NewProducer(channel *amqp.Channel) (p *Producer) {
 	p = &Producer{}
 	p.log = logger.New()
 
-    //p.queue = queue
 	return
 }
 
 func (p *Producer) Produce(channel *amqp.Channel, ctx context.Context) {
 	fmt.Println("start producer ...")
-	//channel := app.channel
-	//defer channel.Close()
-
-	// declaring queue with its properties over the the channel opened
-	//go func() {
-	//ctx.Err() == nil
 
     //Кажется это не пересоздает очередь
 	queue, err := channel.QueueDeclare(

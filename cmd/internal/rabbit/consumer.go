@@ -122,14 +122,6 @@ func (cons *Consumer) makeRequest(url string) (p []byte, err error) {
         return
     }
 
-    /*
-    err = json.Unmarshal(content, &reply)
-    if err != nil {
-    	g.Info("Incorrect json reply for contentId: " + err.Error())
-    	return
-    }
-    */
-
     return p, nil
 }
 

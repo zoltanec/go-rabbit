@@ -35,9 +35,8 @@ func NewApplication(connection *amqp.Connection) (a *Application, err error) {
 
 	app.connection = connection
 	app.Channel, err = app.connection.Channel()
-	//defer app.Channel.Close()
+	defer app.Channel.Close()
 
-	//defer app.channel.Close()
 	if err != nil {
 		panic(err)
 	}

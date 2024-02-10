@@ -32,7 +32,7 @@ func main() {
 	go producer.Produce(appInstance.Channel, ctx)
 
 	//Думаю тут можно без горутины, правильно?
-	//Но для удобности можно горутину, чтобы новые модули запускать?
+	//Но для удобности можно горутину, если дополнительные модули запускать?
     consumer.Consume(appInstance.Channel)
 	appInstance.Run()
 }
